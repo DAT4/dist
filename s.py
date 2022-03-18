@@ -23,7 +23,7 @@ def save_plot(data):
         yaxis = dict(
             tickmode = 'linear',
             tick0 = 0.0,
-            dtick = 0.005
+            dtick = 0.01
         )
     )
 

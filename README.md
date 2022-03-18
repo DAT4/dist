@@ -494,4 +494,4 @@ this graph
 
 ![graph](l7/piopenmpdtu.svg)
 
-which shows us that the code becomes faster with more threads, but a bit before 20 threads the code becomes less effective.
+which shows us that the code becomes faster with more threads, but flattens out
