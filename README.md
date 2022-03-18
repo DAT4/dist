@@ -1732,3 +1732,5 @@ print(df)
 gives us this graph
 
 ![graph](l7/fig1.svg)
+
+which shows us that the code becomes faster with more threads, but a bit before 20 threads the code becomes less effective.
