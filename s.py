@@ -5,9 +5,10 @@ import plotly.express as px
 import sys
 
 input_file  = sys.argv[1]
-output_img  = f'{input_file.split('.')[0]}.svg'
-output_csv  = f'{input_file.split('.')[0]}.csv'
-keys        = [sys.argv[2], 'pi', 'error', 'seconds']
+x_axis      = sys.argv[2]
+output_img  = f'{input_file.split(".")[0]}.svg'
+output_csv  = f'{input_file.split(".")[0]}.csv'
+keys        = [x_axis, 'pi', 'error', 'seconds']
 
 def save_plot(data):
     df = pd.DataFrame([{k:v for k,v in zip(keys,x)} for x in data])
