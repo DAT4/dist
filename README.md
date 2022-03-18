@@ -8,64 +8,27 @@ This is my documentation from the course
 - Conceptually write a parallel version of pi running on an arbitrary number of processors.
 I made a version with mutex and waitgroups
 ```go
-package main
-
-import (
-	"fmt"
-	"runtime"
-	"sync"
-	"time"
-)
-
-const PI25DT float64 = 3.141592653589793238462643
-const INTERVALS int = 10000000
-
-func main() {
-	cpus := runtime.NumCPU()
-	for i := 1; i <= cpus; i++ {
-		for j := 0; j <= 20; j++ {
-			fmt.Println(run(i))
-		}
-	}
-}
-
-func run(cpus int) string {
+for i := cpus; i > 0; i-- {
 	var (
-		sum, pi, time2 float64
-		wg             sync.WaitGroup
-		mu             sync.Mutex
-		intervals      = INTERVALS / cpus
-		dx             = 1.0 / float64(INTERVALS)
-		time1          = time.Now()
+		innerSum float64
+		x        float64
+		start    = intervals * i
+		end      = start - intervals
 	)
-
-	for i := cpus; i > 0; i-- {
-		var (
-			innerSum float64
-			x        float64
-			start    = intervals * i
-			end      = start - intervals
-		)
-		wg.Add(1)
-		go func(w *sync.WaitGroup) {
-			defer w.Done()
-			for j := start; j > end; j-- {
-				x = dx * (float64(j) - 0.5)
-				innerSum += 4.0 / (1.0 + x*x)
-			}
-			mu.Lock()
-			sum += innerSum
-			mu.Unlock()
-		}(&wg)
-	}
-
-	wg.Wait()
-
-	pi = dx * sum
-
-	time2 = time.Since(time1).Seconds()
-
-	return fmt.Sprintf("%d, %.24f, %.24f, %.24f", cpus, PI25DT, PI25DT-pi, time2)
+	wg.Add(1)
+	go func(w *sync.WaitGroup) {
+		defer w.Done()
+		for j := start; j > end; j-- {
+			x = dx * (float64(j) - 0.5)
+			innerSum += 4.0 / (1.0 + x*x)
+		}
+		mu.Lock()
+		sum += innerSum
+		mu.Unlock()
+	}(&wg)
+}
+wg.Wait()
+pi = dx * sum
 }
 ```
 which gave the following output with 20 threads
@@ -97,65 +60,33 @@ with some statistics I got this graph
 
 I made another version with channels
 ```go
-package main
-
-import (
-	"fmt"
-	"runtime"
-	"time"
-)
-
-const PI25DT float64 = 3.141592653589793238462643
-const INTERVALS int = 10000000
-
-func main() {
-	cpus := runtime.NumCPU()
-	for i := 1; i <= cpus; i++ {
-		for j := 0; j <= 20; j++ {
-			fmt.Println(run(i))
-		}
-	}
-}
-
-func run(cpus int) string {
-	var (
-		sum, pi, time2 float64
-		ch             = make(chan float64)
-		intervals      = INTERVALS / cpus
-		dx             = 1.0 / float64(INTERVALS)
-		time1          = time.Now()
-	)
-
-	go func() {
-		for i := cpus; i > 0; i-- {
-			go func() {
-				var (
-					innerSum float64
-					x        float64
-					start    = intervals * i
-					end      = start - intervals
-				)
-				for j := start; j > end; j-- {
-					x = dx * (float64(j) - 0.5)
-					innerSum += 4.0 / (1.0 + x*x)
-				}
-				ch <- innerSum
-			}()
-		}
-	}()
-
+go func() {
 	for i := cpus; i > 0; i-- {
-		sum += <-ch
+		go func() {
+			var (
+				innerSum float64
+				x        float64
+				start    = intervals * i
+				end      = start - intervals
+			)
+			for j := start; j > end; j-- {
+				x = dx * (float64(j) - 0.5)
+				innerSum += 4.0 / (1.0 + x*x)
+			}
+			ch <- innerSum
+		}()
 	}
+}()
 
-	pi = dx * sum
-
-	time2 = time.Since(time1).Seconds()
-
-	return fmt.Sprintf("%d, %.24f, %.24f, %.24f", cpus, PI25DT, PI25DT-pi, time2)
+for i := cpus; i > 0; i-- {
+	sum += <-ch
 }
+
+pi = dx * sum
 ```
+
 which gave this output
+
 
 ```csv
 1.0, 3.141592653589793, 6.2172489379e-14, 0.05420451619047619
@@ -241,15 +172,6 @@ int main (int argc, char *argv[])
 ```
 - Use MPI to implement a parallel version of PI
 ```c
-#include "mpi.h"
-#include "time.h"
-#include <stdio.h>
-#include <stdlib.h>
-#define  MASTER		0
-#define PI25DT 3.141592653589793238462643
-#define INTERVALS 10000000
-
-
 int main (int argc, char *argv[])
 {
     double x, f, local_sum, pi;
@@ -301,37 +223,6 @@ int main (int argc, char *argv[])
 ```
 - Make statistics on the output by changing factors
 ```sh
-#!/bin/sh 
-### General options 
-### -- specify queue -- 
-#BSUB -q hpc
-### -- set the job Name -- 
-#BSUB -J My_Application
-### -- ask for number of cores (default: 1) -- 
-#BSUB -n {cpucore}
-### -- specify that the cores must be on the same host -- 
-#BSUB -R "span[hosts=1]"
-### -- specify that we need 2GB of memory per core/slot -- 
-#BSUB -R "rusage[mem=2GB]"
-### -- specify that we want the job to get killed if it exceeds 3 GB per core/slot -- 
-#BSUB -M 3GB
-### -- set walltime limit: hh:mm -- 
-#BSUB -W 24:00 
-### -- set the email address -- 
-# please uncomment the following line and put in your e-mail address,
-# if you want to receive e-mail notifications on a non-default address
-##BSUB -u your_email_address
-### -- send notification at start -- 
-#BSUB -B 
-### -- send notification at completion -- 
-#BSUB -N 
-### -- Specify the output and error file. %J is the job-id -- 
-### -- -o and -e mean append, -oo and -eo mean overwrite -- 
-#BSUB -o Output_%J.out 
-#BSUB -e Error_%J.err 
-
-module load mpi
-
 mpirun ./main > log/main_{n}.log 
 ```
 
@@ -348,7 +239,12 @@ for i in range(1,16):
 
 ```sh
 cd run
-bsub < run/*.txt
+for x in *.txt; do bsub < x ; done
+```
+
+Wait until everything is complete
+
+```sh
 cat *.log >> out.log
 ```
 
@@ -386,19 +282,6 @@ Which shows that the execution time becomes lower the more cores we assign.
 # Week 6 
 - Write an OpenMP version of PI
 ```c
-#include <omp.h>
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <limits.h>
-#include <string.h> 
-#define  MASTER 0
-#define PI25DT 3.141592653589793238462643
-#define INTERVALS 10000000
-
-double PI();
-
 int main (int argc, char *argv[])
 {
 	if (strlen(argv[1]) == 0) {return 1;}
