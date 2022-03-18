@@ -17,7 +17,7 @@ aggregation = [[sum([x[i]
 
 df = pd.DataFrame([{k:v for k,v in zip(keys,x)} for x in aggregation])
 fig = px.line(df, x='threads', y='seconds')
-fig.write_image('fig1.png')
+fig.write_image('fig1.svg')
 
 print(df)
 
