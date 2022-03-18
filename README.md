@@ -11,6 +11,54 @@ This is my documentation from the course
 - When is `MPI_Scatter` and `MPI_Gather` useful?
 - What happens if all jobs send before receiving?
 - Change communication.c to use non blocking operations
+```c
+#include "mpi.h"
+#include <stdio.h>
+#include <stdlib.h>
+#define  MASTER		0
+
+int main (int argc, char *argv[])
+{
+  int  numtasks, taskid, len, partner, message;
+  char hostname[MPI_MAX_PROCESSOR_NAME];
+
+  MPI_Status status;
+  MPI_Request request;
+
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &taskid);
+  MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
+
+  /* need an even number of tasks  */
+  if (numtasks % 2 != 0) {
+   if (taskid == MASTER)
+    printf("Quitting. Need an even number of tasks: numtasks=%d\n", numtasks);
+  } else {
+    if (taskid == MASTER)
+      printf("MASTER: Number of MPI tasks is: %d\n",numtasks);
+
+    MPI_Get_processor_name(hostname, &len);
+    printf ("Hello from task %d on %s!\n", taskid, hostname);
+
+    /* determine partner and then send/receive with partner */
+    if (taskid < numtasks/2) {
+      partner = numtasks/2 + taskid;
+      MPI_Isend(&taskid, 1, MPI_INT, partner, 1, MPI_COMM_WORLD, &request);
+      MPI_Irecv(&message, 1, MPI_INT, partner, 1, MPI_COMM_WORLD, &request);
+    } else if (taskid >= numtasks/2) {
+      partner = taskid - numtasks/2;
+      MPI_Irecv(&message, 1, MPI_INT, partner, 1, MPI_COMM_WORLD, &request);
+      MPI_Isend(&taskid, 1, MPI_INT, partner, 1, MPI_COMM_WORLD, &request);
+    }
+
+    MPI_Waitall(1, &request, &status);
+    /* print partner info and exit*/
+    printf("Task %d is partner with %d\n",taskid,message);
+  }
+
+  MPI_Finalize();
+}
+```
 - Use MPI to implement a parallel version of PI
 ```c
 #include "mpi.h"
@@ -763,5 +811,7 @@ print(df)
 We get this graph
 
 ![graph](fig1.svg)
+
+Which shows that the execution time becomes lower the more cores we assign.
 
 # Week 6 
