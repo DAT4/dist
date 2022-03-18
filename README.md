@@ -5,6 +5,65 @@ This is my documentation from the course
 # Week 1
 # Week 2
 # Week 3
+- Conceptually write a parallel version of pi running on an arbitrary number of processors.
+```go
+package main
+
+import (
+	"fmt"
+	"runtime"
+	"sync"
+	"time"
+)
+
+const PI25DT float64 = 3.141592653589793238462643
+const INTERVALS int = 10000000
+
+func main() {
+	fmt.Printf("Number of intervals: %d\n", INTERVALS)
+
+	var (
+		sum, pi, time2 float64
+		wg             sync.WaitGroup
+		mu             sync.Mutex
+		cpus           = runtime.NumCPU()
+		intervals      = INTERVALS / cpus
+		dx             = 1.0 / float64(INTERVALS)
+		time1          = time.Now()
+	)
+
+	for i := cpus; i > 0; i-- {
+		var (
+			innerSum float64
+			x        float64
+			start    = intervals * i
+			end      = start - intervals
+		)
+		wg.Add(1)
+		go func(w *sync.WaitGroup) {
+			defer w.Done()
+			for j := start; j > end; j-- {
+				x = dx * (float64(j) - 0.5)
+				innerSum += 4.0 / (1.0 + x*x)
+			}
+			mu.Lock()
+			sum += innerSum
+			mu.Unlock()
+		}(&wg)
+	}
+
+	wg.Wait()
+
+	pi = dx * sum
+
+	time2 = time.Since(time1).Seconds()
+
+	fmt.Printf("Computed PI\t%.24f\n", pi)
+	fmt.Printf("The true PI\t%.24f\n", PI25DT)
+	fmt.Printf("Error\t\t%.24f\n", PI25DT-pi)
+	fmt.Printf("Elaped time(s)\t%f\n", time2)
+}
+```
 # Week 4
 # Week 5
 - When is `MPI_REDUCE` useful:
