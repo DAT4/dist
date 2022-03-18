@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
 
     if (taskid == 0) { 
 	time1 = clock();
-	printf("Number of intervals pr core: %ld\n", intervals); 
+	//printf("Number of intervals pr core: %ld\n", intervals); 
     }
 
     local_sum = 0.0;
@@ -44,19 +44,15 @@ int main (int argc, char *argv[])
 
     MPI_Reduce(&local_sum, &global_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
+
     if (taskid == 0) {
 	time2 = (clock() - time1) / (double) CLOCKS_PER_SEC;
 	pi = dx*global_sum;
-
-	printf("\n");
-	printf("Computed PI %.24f\n", pi);
-	printf("The true PI %.24f\n", PI25DT);
-	printf("Error       %.24f\n", PI25DT-pi);
-	printf("Elapsed time (ns) = %.24f\n", time2);
-	printf("\n");
+	printf("%d, %.24f, %.24f, %.24f, %.24f\n", numtasks, pi, PI25DT, PI25DT-pi, time2);
     }
 
     MPI_Finalize();
 
     return 0;
 }
+
