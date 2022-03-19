@@ -53,5 +53,5 @@ func run(cpus int) string {
 
 	time2 = time.Since(time1).Seconds()
 
-	return fmt.Sprintf("%d, %.24f, %.24f, %.24f", cpus, PI25DT, PI25DT-pi, time2)
+	return fmt.Sprintf("%d, %.24f, %.24f, %.24f", cpus, pi, PI25DT-pi, time2)
 }
