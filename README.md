@@ -1,6 +1,6 @@
 # Distributed systems
 
-This is my documentation from the course 
+This is my documentation from the course, the full code can be found in each lectures folder
 
 # Week 1
 # Week 2
@@ -65,11 +65,11 @@ I made another version with channels
 ```go
 go func() {
 	for i := cpus; i > 0; i-- {
-		go func() {
+		go func(cpu int) {
 			var (
 				innerSum float64
 				x        float64
-				start    = intervals * i
+				start    = intervals * cpu
 				end      = start - intervals
 			)
 			for j := start; j > end; j-- {
@@ -77,7 +77,7 @@ go func() {
 				innerSum += 4.0 / (1.0 + x*x)
 			}
 			ch <- innerSum
-		}()
+		}(i)
 	}
 }()
 
