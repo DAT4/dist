@@ -29,11 +29,11 @@ func run(cpus int) string {
 
 	go func() {
 		for i := cpus; i > 0; i-- {
-			go func() {
+			go func(cpu int) {
 				var (
 					innerSum float64
 					x        float64
-					start    = intervals * i
+					start    = intervals * cpu
 					end      = start - intervals
 				)
 				for j := start; j > end; j-- {
@@ -41,7 +41,7 @@ func run(cpus int) string {
 					innerSum += 4.0 / (1.0 + x*x)
 				}
 				ch <- innerSum
-			}()
+			}(i)
 		}
 	}()
 
