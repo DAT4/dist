@@ -59,7 +59,7 @@ which gave the following output with 20 threads
 
 with some statistics I got this graph
 
-![graph](l4/pigomutexdtu.svg)
+![graph](l3/pigomutexdtu.svg)
 
 I made another version with channels
 ```go
@@ -119,7 +119,7 @@ which gave this output
 
 with some statistics I got this graph
 
-![graph](l4/pigochandtu.svg)
+![graph](l3/pigochandtu.svg)
 
 # Week 4
 # Week 5
