@@ -20,6 +20,7 @@ int main (int argc, char *argv[])
 	if (*p != '\0' || errno != 0) {return 1;}
 	if (arg < INT_MIN || arg > INT_MAX) {return 1;}
 	int cpu = arg;
+
 	double itime, ftime, exec_time;
 	itime = omp_get_wtime();
 
